@@ -18,32 +18,32 @@ RedBG="\033[41;37m"
 Font="\033[0m"
 
 #notification information
-Info="${Green}[信息]${Font}"
+Info="${Green}[정보]${Font}"
 OK="${Green}[OK]${Font}"
-Error="${Red}[错误]${Font}"
+Error="${Red}[오류]${Font}"
 
 v2ray_conf_dir="/etc/v2ray"
 nginx_conf_dir="/etc/nginx/conf.d"
 v2ray_conf="${v2ray_conf_dir}/config.json"
 nginx_conf="${nginx_conf_dir}/v2ray.conf"
 
-#生成伪装路径
+#위장 경로 생성
 camouflage=`cat /dev/urandom | head -n 10 | md5sum | head -c 8`
 
 source /etc/os-release
 
-#从VERSION中提取发行版系统的英文名称，为了在debian/ubuntu下添加相对应的Nginx apt源
+#VERSION 중 시스템 영문명을 가져와서 debian/ubuntu에서 적합한 Nginx apt 찾아냄
 VERSION=`echo ${VERSION} | awk -F "[()]" '{print $2}'`
 
 check_system(){
     
     if [[ "${ID}" == "centos" && ${VERSION_ID} -ge 7 ]];then
-        echo -e "${OK} ${GreenBG} 当前系统为 Centos ${VERSION_ID} ${VERSION} ${Font} "
+        echo -e "${OK} ${GreenBG} 현재 시스템은 Centos ${VERSION_ID} ${VERSION} ${Font} 입니다."
         INS="yum"
-        echo -e "${OK} ${GreenBG} SElinux 设置中，请耐心等待，不要进行其他操作${Font} "
+        echo -e "${OK} ${GreenBG} SElinux 설정 중，기다려 주시기 바랍니다. 기타 조작은 하지 말아 주세요.${Font} "
         setsebool -P httpd_can_network_connect 1
-        echo -e "${OK} ${GreenBG} SElinux 设置完成 ${Font} "
-        ## Centos 也可以通过添加 epel 仓库来安装，目前不做改动
+        echo -e "${OK} ${GreenBG} SElinux 설정 완료 ${Font} "
+        ## Centos 도 epel 저장소를 통해 설치 가능하나, 아직 수정 안함.
         cat>/etc/yum.repos.d/nginx.repo<<EOF
 [nginx]
 name=nginx repo
@@ -51,9 +51,9 @@ baseurl=http://nginx.org/packages/mainline/centos/7/\$basearch/
 gpgcheck=0
 enabled=1
 EOF
-        echo -e "${OK} ${GreenBG} Nginx 源 安装完成 ${Font}" 
+        echo -e "${OK} ${GreenBG} Nginx 설치 완료 ${Font}" 
     elif [[ "${ID}" == "debian" && ${VERSION_ID} -ge 8 ]];then
-        echo -e "${OK} ${GreenBG} 当前系统为 Debian ${VERSION_ID} ${VERSION} ${Font} "
+        echo -e "${OK} ${GreenBG} 현재 시스템은 Debian ${VERSION_ID} ${VERSION} ${Font} 입니다. "
         INS="apt"
         ## 添加 Nginx apt源
         if [ ! -f nginx_signing.key ];then
@@ -63,7 +63,7 @@ EOF
         apt-key add nginx_signing.key
         fi
     elif [[ "${ID}" == "ubuntu" && `echo "${VERSION_ID}" | cut -d '.' -f1` -ge 16 ]];then
-        echo -e "${OK} ${GreenBG} 当前系统为 Ubuntu ${VERSION_ID} ${VERSION_CODENAME} ${Font} "
+        echo -e "${OK} ${GreenBG} 현재 시스템은 Ubuntu ${VERSION_ID} ${VERSION_CODENAME} ${Font} 입니다."
         INS="apt"
         ## 添加 Nginx apt源
         if [ ! -f nginx_signing.key ];then
@@ -73,26 +73,26 @@ EOF
         apt-key add nginx_signing.key
         fi
     else
-        echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font} "
+        echo -e "${Error} ${RedBG} 현재 시스템은 ${ID} ${VERSION_ID} 이며 지원하지 않는 시스템입니다. 설치를 중단합니다. ${Font} "
         exit 1
     fi
 
 }
 is_root(){
     if [ `id -u` == 0 ]
-        then echo -e "${OK} ${GreenBG} 当前用户是root用户，进入安装流程 ${Font} "
+        then echo -e "${OK} ${GreenBG} 현재 사용자는 root 계정입니다. 설치를 진행합니다. ${Font} "
         sleep 3
     else
-        echo -e "${Error} ${RedBG} 当前用户不是root用户，请切换到root用户后重新执行脚本 ${Font}" 
+        echo -e "${Error} ${RedBG} 현재 사용자는 root 계정이 아닙니다. root계정으로 전환 후 스크립트를 다시 실행해 주세요. ${Font}" 
         exit 1
     fi
 }
 judge(){
     if [[ $? -eq 0 ]];then
-        echo -e "${OK} ${GreenBG} $1 完成 ${Font}"
+        echo -e "${OK} ${GreenBG} $1 완료 ${Font}"
         sleep 1
     else
-        echo -e "${Error} ${RedBG} $1 失败${Font}"
+        echo -e "${Error} ${RedBG} $1 실패${Font}"
         exit 1
     fi
 }
@@ -103,7 +103,7 @@ ntpdate_install(){
         ${INS} update
         ${INS} install ntpdate -y
     fi
-    judge "安装 NTPdate 时间同步服务 "
+    judge "NTPdate 시간 동기화서비스 설치 "
 }
 time_modify(){
 
@@ -111,15 +111,15 @@ time_modify(){
 
     systemctl stop ntp &>/dev/null
 
-    echo -e "${Info} ${GreenBG} 正在进行时间同步 ${Font}"
+    echo -e "${Info} ${GreenBG} 시간 동기화 진행 중 ${Font}"
     ntpdate time.nist.gov
 
     if [[ $? -eq 0 ]];then 
-        echo -e "${OK} ${GreenBG} 时间同步成功 ${Font}"
-        echo -e "${OK} ${GreenBG} 当前系统时间 `date -R`（请注意时区间时间换算，换算后时间误差应为三分钟以内）${Font}"
+        echo -e "${OK} ${GreenBG} 시간 동기화 성공 ${Font}"
+        echo -e "${OK} ${GreenBG} 현재 시스템 시간 `date -R`（각 시차 구간별로 시간을 환산하면 3분 이내여야 합니다.）${Font}"
         sleep 1
     else
-        echo -e "${Error} ${RedBG} 时间同步失败，请检查ntpdate服务是否正常工作 ${Font}"
+        echo -e "${Error} ${RedBG} 시간 동기화 실패, ntpdate 서비스가 정상적으로 실행 중인지 확인하세요. ${Font}"
     fi 
 }
 dependency_install(){
@@ -130,22 +130,22 @@ dependency_install(){
     else
         ${INS} install cron
     fi
-    judge "安装 crontab"
+    judge "crontab 설치"
 
-    # 新版的IP判定不需要使用net-tools
+    # 새 버전의 IP판정은 net-tools를 사용하지 않아도 됨
     # ${INS} install net-tools -y
-    # judge "安装 net-tools"
+    # judge "net-tools 설치"
 
     ${INS} install bc -y
-    judge "安装 bc"
+    judge "bc 설치"
 
     ${INS} install unzip -y
-    judge "安装 unzip"
+    judge "unzip 설치"
 }
 port_alterid_set(){
-    stty erase '^H' && read -p "请输入连接端口（default:443）:" port
+    stty erase '^H' && read -p "연결 포트를 입력하세요（default:443）:" port
     [[ -z ${port} ]] && port="443"
-    stty erase '^H' && read -p "请输入alterID（default:64）:" alterID
+    stty erase '^H' && read -p "alterID를 입력하세요（default:64）:" alterID
     [[ -z ${alterID} ]] && alterID="64"
 }
 modify_port_UUID(){
@@ -169,10 +169,10 @@ modify_nginx(){
     sed -i "27i \\\tproxy_intercept_errors on;"  /etc/nginx/nginx.conf
 }
 web_camouflage(){
-    ##请注意 这里和LNMP脚本的默认路径冲突，千万不要在安装了LNMP的环境下使用本脚本，否则后果自负
+    ##주의: 이곳과 LNMP 스크립트의 경로가 충돌하는 경우, 절대 LNMP 환경에서 본 스크립트를 사용하지 마세요. 결과는 본인이 책임 지셔야 합니다.
     rm -rf /home/wwwroot && mkdir -p /home/wwwroot && cd /home/wwwroot
     git clone https://github.com/wulabing/sCalc.git
-    judge "web 站点伪装"   
+    judge "web 위장"   
 }
 v2ray_install(){
     if [[ -d /root/v2ray ]];then
@@ -186,24 +186,24 @@ v2ray_install(){
     
     if [[ -f go.sh ]];then
         bash go.sh --force
-        judge "安装 V2ray"
+        judge "V2ray 설치"
     else
-        echo -e "${Error} ${RedBG} V2ray 安装文件下载失败，请检查下载地址是否可用 ${Font}"
+        echo -e "${Error} ${RedBG} V2ray 설치 파일 다운로드 실패，다운로드 주소가 사용 가능한지 확인하세요. ${Font}"
         exit 4
     fi
 }
 nginx_install(){
     ${INS} install nginx -y
     if [[ -d /etc/nginx ]];then
-        echo -e "${OK} ${GreenBG} nginx 安装完成 ${Font}"
+        echo -e "${OK} ${GreenBG} nginx 설치 완료 ${Font}"
         sleep 2
     else
-        echo -e "${Error} ${RedBG} nginx 安装失败 ${Font}"
+        echo -e "${Error} ${RedBG} nginx 설치 실패 ${Font}"
         exit 5
     fi
     if [[ ! -f /etc/nginx/nginx.conf.bak ]];then
         cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
-        echo -e "${OK} ${GreenBG} nginx 初始配置备份完成 ${Font}"
+        echo -e "${OK} ${GreenBG} nginx 초기 설정 백업 완료 ${Font}"
         sleep 1
     fi
 }
@@ -213,32 +213,32 @@ ssl_install(){
     else
         ${INS} install socat netcat -y
     fi
-    judge "安装 SSL 证书生成脚本依赖"
+    judge "SSL 증서 생성 스크립트 의존성 파일 설치"
 
     curl  https://get.acme.sh | sh
-    judge "安装 SSL 证书生成脚本"
+    judge "SSL 증서 생성 스크립트 설치"
 
 }
 domain_check(){
-    stty erase '^H' && read -p "请输入你的域名信息(eg:www.wulabing.com):" domain
+    stty erase '^H' && read -p "도메인 정보를 입력해주세요(eg:www.wulabing.com):" domain
     domain_ip=`ping ${domain} -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
-    echo -e "${OK} ${GreenBG} 正在获取 公网ip 信息，请耐心等待 ${Font}"
+    echo -e "${OK} ${GreenBG} 공인ip 정보 확인 중，기다려 주세요 ${Font}"
     local_ip=`curl -4 ip.sb`
-    echo -e "域名dns解析IP：${domain_ip}"
-    echo -e "本机IP: ${local_ip}"
+    echo -e "도메인에 대해 dns로 확인된 IP：${domain_ip}"
+    echo -e "서버 IP: ${local_ip}"
     sleep 2
     if [[ $(echo ${local_ip}|tr '.' '+'|bc) -eq $(echo ${domain_ip}|tr '.' '+'|bc) ]];then
-        echo -e "${OK} ${GreenBG} 域名dns解析IP  与 本机IP 匹配 ${Font}"
+        echo -e "${OK} ${GreenBG} 도메인에 대한 dns 확인 IP 와 서버 IP가 일치하지 않습니다. ${Font}"
         sleep 2
     else
-        echo -e "${Error} ${RedBG} 域名dns解析IP 与 本机IP 不匹配 是否继续安装？（y/n）${Font}" && read install
+        echo -e "${Error} ${RedBG} 도메인에 대한 dns 확인 IP 와 서버 IP가 일치하지 않습니다. 계속 설치하시겠습니까?（y/n）${Font}" && read install
         case $install in
         [yY][eE][sS]|[yY])
-            echo -e "${GreenBG} 继续安装 ${Font}" 
+            echo -e "${GreenBG} 계속 설치 ${Font}" 
             sleep 2
             ;;
         *)
-            echo -e "${RedBG} 安装终止 ${Font}" 
+            echo -e "${RedBG} 설치 중단 ${Font}" 
             exit 2
             ;;
         esac
@@ -247,30 +247,30 @@ domain_check(){
 
 port_exist_check(){
     if [[ 0 -eq `lsof -i:"$1" | wc -l` ]];then
-        echo -e "${OK} ${GreenBG} $1 端口未被占用 ${Font}"
+        echo -e "${OK} ${GreenBG} $1 포트 사용 가능 ${Font}"
         sleep 1
     else
-        echo -e "${Error} ${RedBG} 检测到 $1 端口被占用，以下为 $1 端口占用信息 ${Font}"
+        echo -e "${Error} ${RedBG} $1 포트가 이미 사용 중입니다.端口被占用，아래는 $1 포트 사용 정보입니다. ${Font}"
         lsof -i:"$1"
-        echo -e "${OK} ${GreenBG} 5s 后将尝试自动 kill 占用进程 ${Font}"
+        echo -e "${OK} ${GreenBG} 5초 후 포트를 사용하는 프로세스를 kill 합니다. ${Font}"
         sleep 5
         lsof -i:"$1" | awk '{print $2}'| grep -v "PID" | xargs kill -9
-        echo -e "${OK} ${GreenBG} kill 完成 ${Font}"
+        echo -e "${OK} ${GreenBG} kill 완료 ${Font}"
         sleep 1
     fi
 }
 acme(){
     ~/.acme.sh/acme.sh --issue -d ${domain} --standalone -k ec-256 --force
     if [[ $? -eq 0 ]];then
-        echo -e "${OK} ${GreenBG} SSL 证书生成成功 ${Font}"
+        echo -e "${OK} ${GreenBG} SSL 증서 생성 완료 ${Font}"
         sleep 2
         ~/.acme.sh/acme.sh --installcert -d ${domain} --fullchainpath /etc/v2ray/v2ray.crt --keypath /etc/v2ray/v2ray.key --ecc
         if [[ $? -eq 0 ]];then
-        echo -e "${OK} ${GreenBG} 证书配置成功 ${Font}"
+        echo -e "${OK} ${GreenBG} 증서 설정 완료 ${Font}"
         sleep 2
         fi
     else
-        echo -e "${Error} ${RedBG} SSL 证书生成失败 ${Font}"
+        echo -e "${Error} ${RedBG} SSL 증서 생성 실패 ${Font}"
         exit 1
     fi
 }
@@ -278,7 +278,7 @@ v2ray_conf_add(){
     cd /etc/v2ray
     wget https://raw.githubusercontent.com/wulabing/V2Ray_ws-tls_bash_onekey/master/tls/config.json -O config.json
 modify_port_UUID
-judge "V2ray 配置修改"
+judge "V2ray 설정 수정"
 }
 nginx_conf_add(){
     touch ${nginx_conf_dir}/v2ray.conf
@@ -312,20 +312,20 @@ nginx_conf_add(){
 EOF
 
 modify_nginx
-judge "Nginx 配置修改"
+judge "Nginx 설치 수정"
 
 }
 
 start_process_systemd(){
-    ### nginx服务在安装完成后会自动启动。需要通过restart或reload重新加载配置
+    ### nginx서비스는 서치 완료후 자동 시작됩니다. restart 또는 reload를 통해 설정을 다시 불러옵니다.
     systemctl start nginx 
-    judge "Nginx 启动"
+    judge "Nginx 시작"
 
     systemctl enable nginx
-    judge "设置 Nginx 开机自启"
+    judge "Nginx 자동 시작 설정"
 
     systemctl start v2ray
-    judge "V2ray 启动"
+    judge "V2ray 시작"
 }
 
 acme_cron_update(){
@@ -336,22 +336,22 @@ acme_cron_update(){
         sed -i "/acme.sh/c 0 0 * * 0 systemctl stop nginx && \"/root/.acme.sh\"/acme.sh --cron --home \"/root/.acme.sh\" \
         > /dev/null && systemctl start nginx " /var/spool/cron/crontabs/root
     fi
-    judge "cron 计划任务更新"
+    judge "cron 스케쥴 갱신"
 }
 show_information(){
     clear
 
-    echo -e "${OK} ${Green} V2ray+ws+tls 安装成功 "
-    echo -e "${Red} V2ray 配置信息 ${Font}"
-    echo -e "${Red} 地址（address）:${Font} ${domain} "
-    echo -e "${Red} 端口（port）：${Font} ${port} "
-    echo -e "${Red} 用户id（UUID）：${Font} ${UUID}"
+    echo -e "${OK} ${Green} V2ray+ws+tls 설치 완료 "
+    echo -e "${Red} V2ray 설정 정보 ${Font}"
+    echo -e "${Red} 주소（address）:${Font} ${domain} "
+    echo -e "${Red} 포트（port）：${Font} ${port} "
+    echo -e "${Red} 사용자id（UUID）：${Font} ${UUID}"
     echo -e "${Red} 额外id（alterId）：${Font} ${alterID}"
-    echo -e "${Red} 加密方式（security）：${Font} 自适应 "
-    echo -e "${Red} 传输协议（network）：${Font} ws "
-    echo -e "${Red} 伪装类型（type）：${Font} none "
-    echo -e "${Red} 路径（不要落下/）：${Font} /${camouflage}/ "
-    echo -e "${Red} 底层传输安全：${Font} tls "
+    echo -e "${Red} 암호화 방식（security）：${Font} 自适应 "
+    echo -e "${Red} 전송프로토콜（network）：${Font} ws "
+    echo -e "${Red} 위장종류（type）：${Font} none "
+    echo -e "${Red} 경로（/빼먹지 마세요）：${Font} /${camouflage}/ "
+    echo -e "${Red} 저수준 전송 보안：${Font} tls "
 
     
 
@@ -372,11 +372,11 @@ main(){
     nginx_conf_add
     web_camouflage
 
-    #改变证书安装位置，防止端口冲突关闭相关应用
+    #증서 설치 위치 변경하면, 포트 충돌을 방지하기 위해서 관련 프로그램을 종료해주세요.
     systemctl stop nginx
     systemctl stop v2ray
     
-    #将证书生成放在最后，尽量避免多次尝试脚本从而造成的多次证书申请
+    #증서생성완료후,증서를 여러번 신청하는 것을 방지하기 위해서 스크립트를 여러번 실행하지 마세요.
     ssl_install
     acme
     
